@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendaftaran Pasien - GSP Nurul Hayat</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23007979'/%3E%3Cpath d='M3 11L12 4L21 11M5 9.5V19c0 .55.45 1 1 1h3v-5c0-.55.45-1 1-1h4c.55 0 1 .45 1 1v5h3c.55 0 1-.45 1-1V9.5' stroke='%23F5F5F5' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --teal: #007979;
+    --teal-light: #00a3a3;
+    --navy: #093C5D;
+    --offwhite: #F5F5F5;
+    --danger: #d6534a;
+    --warning: #d9a441;
+    --glass-bg: rgba(245, 245, 245, 0.10);
+    --glass-border: rgba(245, 245, 245, 0.22);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: linear-gradient(160deg, var(--teal) 0%, var(--navy) 100%);
+    color: var(--offwhite);
+    position: relative;
+    overflow-x: hidden;
+    padding: 44px 20px 60px;
+  }
+  body::before, body::after {
+    content: ''; position: fixed; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: 0;
+  }
+  body::before { width: 320px; height: 320px; background: rgba(0,163,163,0.5); top: -100px; right: -80px; }
+  body::after { width: 300px; height: 300px; background: rgba(9,60,93,0.6); bottom: -90px; left: -100px; }
+
+  .gsp-inner { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; }
+  h1 { font-family: 'Sora', sans-serif; font-size: 22px; margin: 0 0 6px; text-align: center; }
+  .gsp-subtitle { text-align: center; font-size: 13px; color: rgba(245,245,245,0.75); margin: 0 0 22px; }
+
+  .gsp-glass { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 18px; }
+
+  .occupancy-strip { display: none; align-items: center; gap: 10px; padding: 12px 16px; margin-bottom: 14px; font-size: 12px; }
+  .occupancy-dots { display: flex; gap: 4px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(245,245,245,0.25); }
+  .dot.filled { background: var(--offwhite); }
+
+  .warning-banner { display: none; padding: 13px 16px; margin-bottom: 18px; border-radius: 14px; background: rgba(217,164,65,0.2); border: 1px solid rgba(217,164,65,0.4); font-size: 13px; line-height: 1.5; }
+
+  form { padding: 26px 22px; display: flex; flex-direction: column; gap: 16px; }
+  label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
+  .gsp-hint { font-weight: 400; font-size: 11px; color: rgba(245,245,245,0.6); margin-top: 4px; }
+  input, textarea, select {
+    width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--glass-border);
+    background: rgba(245,245,245,0.92); color: var(--navy); font-size: 14px; font-family: inherit;
+  }
+  textarea { min-height: 76px; resize: vertical; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--teal-light); outline-offset: 1px; }
+  input[type="file"] { padding: 9px 10px; background: rgba(245,245,245,0.85); }
+  .gsp-file-status { font-size: 11px; margin-top: 5px; min-height: 14px; }
+  .gsp-file-status.ok { color: #bdf0ea; }
+  .gsp-file-status.error { color: #ffb3ab; }
+  .gsp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .gsp-row { grid-template-columns: 1fr; } }
+
+  button[type="submit"] {
+    margin-top: 6px; padding: 14px; border-radius: 12px; border: none; cursor: pointer;
+    background: var(--offwhite); color: var(--navy); font-weight: 700; font-size: 15px; font-family: inherit;
+    transition: opacity 0.15s ease;
+  }
+  button[type="submit"]:disabled { opacity: 0.6; cursor: wait; }
+
+  .gsp-feedback { display: none; padding: 14px 16px; border-radius: 12px; font-size: 13px; margin-top: 4px; line-height: 1.5; }
+  .gsp-feedback.success { background: rgba(0,163,163,0.25); border: 1px solid rgba(0,163,163,0.5); }
+  .gsp-feedback.error { background: rgba(214,83,74,0.2); border: 1px solid rgba(214,83,74,0.45); }
+
+  .gsp-success-card { display: none; padding: 34px 26px; text-align: center; }
+  .gsp-success-card h2 { font-family: 'Sora', sans-serif; font-size: 18px; margin: 10px 0 8px; }
+  .gsp-success-card p { font-size: 13px; color: rgba(245,245,245,0.8); margin: 0; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+  <div class="gsp-inner">
+    <h1>Pendaftaran Pasien GSP Nurul Hayat</h1>
+    <p class="gsp-subtitle">Isi data di bawah untuk mendaftar sebagai penghuni Griya Singgah Pasien</p>
+
+    <div class="occupancy-strip gsp-glass" id="occupancyStrip">
+      <div class="occupancy-dots" id="occupancyDots"></div>
+      <span id="occupancyText"></span>
+    </div>
+    <div class="warning-banner" id="warningBanner"></div>
+
+    <form id="gspForm" class="gsp-glass">
+      <div>
+        <label>Kota Tujuan</label>
+        <select name="kota" id="kotaSelect" required>
+          <option value="" disabled selected>Pilih kota GSP tujuan</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Nama Pasien</label>
+        <input type="text" name="namaPasien" required>
+      </div>
+
+      <div class="gsp-row">
+        <div>
+          <label>Foto KTP</label>
+          <input type="file" name="fotoKtp" accept="image/*" required>
+          <div class="gsp-file-status" id="ktpStatus"></div>
+        </div>
+        <div>
+          <label>Foto BPJS</label>
+          <input type="file" name="fotoBpjs" accept="image/*" required>
+          <div class="gsp-file-status" id="bpjsStatus"></div>
+        </div>
+      </div>
+
+      <div>
+        <label>Alamat</label>
+        <textarea name="alamat" required></textarea>
+      </div>
+
+      <div class="gsp-row">
+        <div>
+          <label>No. WhatsApp 1</label>
+          <input type="tel" name="noWa1" placeholder="08xxxxxxxxxx" required>
+        </div>
+        <div>
+          <label>No. WhatsApp 2 <span class="gsp-hint">(opsional)</span></label>
+          <input type="tel" name="noWa2" placeholder="08xxxxxxxxxx">
+        </div>
+      </div>
+
+      <div>
+        <label>Riwayat Penyakit</label>
+        <textarea name="riwayatPenyakit" required></textarea>
+      </div>
+
+      <div class="gsp-row">
+        <div>
+          <label>Tanggal Checkin</label>
+          <input type="date" name="tanggalCheckin" required>
+        </div>
+        <div>
+          <label>Tanggal Checkout</label>
+          <input type="date" name="tanggalCheckout" required>
+        </div>
+      </div>
+
+      <div>
+        <label>Nama Penanggung Jawab</label>
+        <input type="text" name="penanggungJawab" required>
+      </div>
+
+      <div class="gsp-feedback" id="gspFeedback"></div>
+
+      <button type="submit" id="gspSubmitBtn">Kirim Pendaftaran</button>
+    </form>
+
+    <div class="gsp-success-card gsp-glass" id="gspSuccessCard">
+      <h2>Pendaftaran terkirim</h2>
+      <p id="gspSuccessMessage">Data Anda sudah kami terima. Admin akan memverifikasi dan menghubungi Anda lewat WhatsApp.</p>
+    </div>
+  </div>
+
+<script>
+(function () {
+  // GANTI dengan URL Web App Apps Script kamu setelah deploy
+  var SCRIPT_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
+
+  // HARUS SAMA PERSIS dengan CITY_LIST di Code.gs (urutan & penulisan)
+  var CITY_LIST = ['Malang', 'Surabaya', 'Semarang'];
+
+  var form = document.getElementById('gspForm');
+  var feedback = document.getElementById('gspFeedback');
+  var submitBtn = document.getElementById('gspSubmitBtn');
+  var kotaSelect = document.getElementById('kotaSelect');
+
+  CITY_LIST.forEach(function (kota) {
+    var opt = document.createElement('option');
+    opt.value = kota;
+    opt.textContent = kota;
+    kotaSelect.appendChild(opt);
+  });
+
+  kotaSelect.addEventListener('change', function () {
+    document.getElementById('warningBanner').style.display = 'none';
+    if (kotaSelect.value) checkOccupancy(kotaSelect.value);
+  });
+
+  function checkOccupancy(kota) {
+    fetch(SCRIPT_URL + '?action=occupancy&kota=' + encodeURIComponent(kota))
+      .then(function (res) { return res.json(); })
+      .then(renderOccupancy)
+      .catch(function () { /* diamkan, jangan blokir form kalau gagal cek */ });
+  }
+
+  function renderOccupancy(data) {
+    var dotsEl = document.getElementById('occupancyDots');
+    dotsEl.innerHTML = '';
+    for (var i = 0; i < data.capacity; i++) {
+      var dot = document.createElement('span');
+      dot.className = 'dot' + (i < data.count ? ' filled' : '');
+      dotsEl.appendChild(dot);
+    }
+    document.getElementById('occupancyText').textContent = data.kota + ': ' + data.count + '/' + data.capacity + ' kamar terisi';
+    document.getElementById('occupancyStrip').style.display = 'flex';
+
+    if (data.full) {
+      var banner = document.getElementById('warningBanner');
+      banner.textContent = 'GSP ' + data.kota + ' saat ini penuh, kemungkinan tersedia mulai ' + (data.earliestCheckout || 'segera') + '. Anda tetap bisa mengisi formulir di bawah — pendaftaran akan diproses begitu ada kamar kosong.';
+      banner.style.display = 'block';
+    }
+  }
+
+  function fileToBase64(file) {
+    return file.arrayBuffer().then(function (buffer) {
+      var bytes = new Uint8Array(buffer);
+      var binary = '';
+      var chunkSize = 8192;
+      for (var i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      return 'data:' + (file.type || 'image/jpeg') + ';base64,' + btoa(binary);
+    });
+  }
+
+  function resizeImage(file, maxWidth, quality) {
+    return new Promise(function (resolve, reject) {
+      var objectUrl = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(objectUrl);
+        var scale = Math.min(1, maxWidth / img.width);
+        var canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('resize gagal'));
+      };
+      img.src = objectUrl;
+    });
+  }
+
+  async function compressImage(file, maxWidth, quality) {
+    if (!file) throw new Error('File foto tidak ditemukan');
+    if (file.size > 20 * 1024 * 1024) throw new Error('Ukuran file terlalu besar (maks 20MB)');
+
+    if (file.size <= 1.5 * 1024 * 1024) {
+      try {
+        return await fileToBase64(file);
+      } catch (err) {
+        throw new Error('Gagal membaca isi file (' + err.name + ': ' + err.message + ')');
+      }
+    }
+
+    try {
+      return await resizeImage(file, maxWidth, quality);
+    } catch (err) {
+      try {
+        return await fileToBase64(file);
+      } catch (err2) {
+        throw new Error('Gagal memproses foto (' + err2.name + ': ' + err2.message + ')');
+      }
+    }
+  }
+
+  function showFeedback(message, isError) {
+    feedback.textContent = message;
+    feedback.className = 'gsp-feedback ' + (isError ? 'error' : 'success');
+    feedback.style.display = 'block';
+  }
+
+  var ktpData = null;
+  var bpjsData = null;
+
+  function setupFileHandler(inputEl, statusEl, onDone) {
+    inputEl.addEventListener('change', async function () {
+      var file = inputEl.files[0];
+      statusEl.className = 'gsp-file-status';
+      if (!file) { statusEl.textContent = ''; onDone(null); return; }
+
+      statusEl.textContent = 'Memproses foto...';
+      try {
+        var dataUri = await compressImage(file, 1200, 0.7);
+        onDone(dataUri);
+        statusEl.textContent = '\u2713 Foto siap dikirim';
+        statusEl.classList.add('ok');
+      } catch (err) {
+        onDone(null);
+        statusEl.textContent = 'Gagal memproses: ' + err.message;
+        statusEl.classList.add('error');
+      }
+    });
+  }
+
+  setupFileHandler(form.fotoKtp, document.getElementById('ktpStatus'), function (v) { ktpData = v; });
+  setupFileHandler(form.fotoBpjs, document.getElementById('bpjsStatus'), function (v) { bpjsData = v; });
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    if (SCRIPT_URL.indexOf('GANTI_DENGAN') === 0) {
+      showFeedback('SCRIPT_URL belum diganti dengan URL Web App Apps Script.', true);
+      return;
+    }
+
+    var checkin = form.tanggalCheckin.value;
+    var checkout = form.tanggalCheckout.value;
+    if (checkin && checkout && checkout < checkin) {
+      showFeedback('Tanggal checkout tidak boleh sebelum tanggal checkin.', true);
+      return;
+    }
+
+    if (!ktpData || !bpjsData) {
+      showFeedback('Foto KTP/BPJS belum selesai diproses atau gagal. Pilih ulang fotonya dan tunggu sampai muncul tanda "Foto siap dikirim" sebelum mengirim.', true);
+      return;
+    }
+
+    feedback.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Mengirim...';
+
+    try {
+      var payload = {
+        action: 'register',
+        kota: form.kota.value,
+        namaPasien: form.namaPasien.value,
+        alamat: form.alamat.value,
+        noWa1: form.noWa1.value,
+        noWa2: form.noWa2.value,
+        riwayatPenyakit: form.riwayatPenyakit.value,
+        tanggalCheckin: checkin,
+        tanggalCheckout: checkout,
+        penanggungJawab: form.penanggungJawab.value,
+        fotoKtp: ktpData,
+        fotoBpjs: bpjsData
+      };
+
+      var res;
+      try {
+        res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+      } catch (netErr) {
+        throw new Error('Gagal terhubung ke server. Periksa koneksi internet lalu coba lagi.');
+      }
+
+      var result;
+      try {
+        result = await res.json();
+      } catch (parseErr) {
+        throw new Error('Server memberi respons yang tidak dikenali. Kemungkinan URL Web App salah/kadaluarsa, atau setelan akses Web App di Apps Script belum "Anyone".');
+      }
+
+      if (result.success) {
+        form.style.display = 'none';
+        document.getElementById('gspSuccessCard').style.display = 'block';
+      } else {
+        showFeedback(result.message || 'Terjadi kesalahan, silakan coba lagi.', true);
+      }
+    } catch (err) {
+      showFeedback(err.message, true);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Kirim Pendaftaran';
+    }
+  });
+})();
+</script>
+</body>
+</html>
