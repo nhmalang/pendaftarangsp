@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Admin - GSP Nurul Hayat</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23007979'/%3E%3Cpath d='M3 11L12 4L21 11M5 9.5V19c0 .55.45 1 1 1h3v-5c0-.55.45-1 1-1h4c.55 0 1 .45 1 1v5h3c.55 0 1-.45 1-1V9.5' stroke='%23F5F5F5' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+
+    :root {
+      --teal: #007979;
+      --teal-light: #00a3a3;
+      --navy: #093C5D;
+      --offwhite: #F5F5F5;
+      --danger: #d6534a;
+      --danger-bg: rgba(214, 83, 74, 0.18);
+      --warning: #d9a441;
+      --glass-bg: rgba(245, 245, 245, 0.10);
+      --glass-border: rgba(245, 245, 245, 0.22);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--offwhite);
+      background: linear-gradient(160deg, var(--teal) 0%, var(--navy) 100%);
+    }
+
+    body { position: relative; overflow-x: hidden; }
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(70px);
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::before { width: 420px; height: 420px; background: rgba(0,163,163,0.45); top: -120px; right: -100px; }
+    body::after { width: 380px; height: 380px; background: rgba(9,60,93,0.55); bottom: -100px; left: -120px; }
+
+    h1, h2, h3 { font-family: 'Sora', sans-serif; margin: 0; }
+
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(9, 60, 93, 0.35);
+    }
+
+    input, textarea {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: rgba(245, 245, 245, 0.92);
+      color: var(--navy);
+      font-size: 14px;
+    }
+    input::placeholder, textarea::placeholder { color: #7c8a92; }
+    input:focus, textarea:focus { outline: 2px solid var(--teal-light); outline-offset: 1px; }
+
+    .btn {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: var(--offwhite); color: var(--navy); }
+    .btn-approve { background: var(--teal-light); color: #ffffff; }
+    .btn-reject { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+    .btn-checkout { background: var(--offwhite); color: var(--navy); }
+    .btn-ghost { background: transparent; color: var(--offwhite); border: 1px solid var(--glass-border); }
+
+    /* ---------- LOGIN ---------- */
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      padding: 20px;
+    }
+    .login-card { width: 100%; max-width: 360px; padding: 36px 30px; text-align: center; }
+    .brand-icon {
+      width: 56px; height: 56px; margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(245,245,245,0.15); border-radius: 16px;
+    }
+    .login-card h1 { font-size: 20px; margin-bottom: 4px; }
+    .login-card p { margin: 0 0 24px; font-size: 13px; color: rgba(245,245,245,0.7); }
+    .login-card form { display: flex; flex-direction: column; gap: 12px; }
+    .error-text { color: #ffb3ab; font-size: 13px; display: none; text-align: left; }
+
+    /* ---------- DASHBOARD ---------- */
+    #dashboardScreen { display: none; position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .topbar-title { display: flex; align-items: center; gap: 10px; }
+    .topbar-title h1 { font-size: 17px; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .occupancy-badge { padding: 7px 14px; border-radius: 999px; background: rgba(0,163,163,0.25); font-size: 13px; font-weight: 600; border: 1px solid rgba(245,245,245,0.2); }
+    .occupancy-badge.badge-full { background: var(--danger-bg); color: #ffd7d2; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .tab { padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; background: rgba(245,245,245,0.08); border: 1px solid var(--glass-border); color: rgba(245,245,245,0.75); }
+    .tab.active { background: var(--offwhite); color: var(--navy); }
+
+    .panel { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+    .card { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+    .card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .card-header h3 { font-size: 16px; }
+    .card-date { font-size: 12px; color: rgba(245,245,245,0.65); white-space: nowrap; }
+    .card-body { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+    .card-field span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(245,245,245,0.55); margin-bottom: 2px; }
+    .card-photos { display: flex; gap: 12px; margin-top: 2px; }
+    .photo-link { background: none; border: none; padding: 0; font-family: inherit; cursor: pointer; color: var(--offwhite); font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+    .photo-modal-box { max-width: 540px; }
+    .photo-modal-box .modal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .photo-modal-box img { width: 100%; border-radius: 12px; display: block; }
+    .photo-loading { font-size: 13px; color: rgba(245,245,245,0.7); text-align: center; padding: 30px 0; }
+    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .reject-reason { font-size: 13px; background: var(--danger-bg); padding: 10px 12px; border-radius: 10px; color: #ffd7d2; }
+    .history-note { font-size: 13px; background: rgba(245,245,245,0.12); padding: 10px 12px; border-radius: 10px; color: rgba(245,245,245,0.85); }
+
+    .empty-state { grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: rgba(245,245,245,0.6); font-size: 14px; }
+
+    /* ---------- MODAL ---------- */
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(9,60,93,0.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 10; padding: 20px; }
+    .modal-box { width: 100%; max-width: 380px; padding: 26px; }
+    .modal-box h3 { font-size: 16px; margin-bottom: 4px; }
+    .modal-box p { font-size: 13px; color: rgba(245,245,245,0.7); margin: 0 0 16px; }
+    .modal-box textarea { min-height: 90px; resize: vertical; }
+    .modal-field { margin-bottom: 12px; }
+    .modal-field label { display: block; font-size: 12px; margin-bottom: 6px; color: rgba(245,245,245,0.75); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+    /* ---------- TOAST ---------- */
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); padding: 12px 20px; border-radius: 12px; background: var(--offwhite); color: var(--navy); font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.25s ease; z-index: 20; box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.toast-error { background: var(--danger); color: #fff; }
+
+    body.busy { cursor: wait; }
+    body.busy .btn { pointer-events: none; opacity: 0.6; }
+
+    @media (max-width: 480px) {
+      .panel { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loginScreen">
+    <div class="login-card glass">
+      <div class="brand-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 11L12 4L21 11" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 9.5V19C5 19.5523 5.44772 20 6 20H9V15C9 14.4477 9.44772 14 10 14H14C14.5523 14 15 14.4477 15 15V20H18C18.5523 20 19 19.5523 19 19V9.5" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1>Dashboard Admin</h1>
+      <p>GSP Nurul Hayat</p>
+      <form id="loginForm" onsubmit="login(event)">
+        <input type="password" id="passwordInput" placeholder="Password admin" required autofocus>
+        <div class="error-text" id="loginError"></div>
+        <button type="submit" class="btn btn-primary" id="loginBtn">Masuk</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="dashboardScreen">
+    <div class="topbar glass">
+      <div class="topbar-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 11L12 4L21 11" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 9.5V19C5 19.5523 5.44772 20 6 20H9V15C9 14.4477 9.44772 14 10 14H14C14.5523 14 15 14.4477 15 15V20H18C18.5523 20 19 19.5523 19 19V9.5" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h1 id="topbarTitle">GSP Nurul Hayat</h1>
+      </div>
+      <div class="topbar-right">
+        <span class="occupancy-badge" id="occupancyBadge">-/- kamar terisi</span>
+        <button class="btn btn-ghost" onclick="location.reload()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="tab-menunggu" onclick="switchTab('menunggu')">Menunggu Verifikasi (<span id="tabCountMenunggu">0</span>)</div>
+      <div class="tab" id="tab-diterima" onclick="switchTab('diterima')">Sedang Menginap (<span id="tabCountDiterima">0</span>)</div>
+      <div class="tab" id="tab-ditolak" onclick="switchTab('ditolak')">Ditolak (<span id="tabCountDitolak">0</span>)</div>
+      <div class="tab" id="tab-selesai" onclick="switchTab('selesai')">Riwayat (<span id="tabCountSelesai">0</span>)</div>
+    </div>
+
+    <div class="panel" id="panel-menunggu" style="display: grid;"></div>
+    <div class="panel" id="panel-diterima" style="display: none;"></div>
+    <div class="panel" id="panel-ditolak" style="display: none;"></div>
+    <div class="panel" id="panel-selesai" style="display: none;"></div>
+  </div>
+
+  <div class="modal-backdrop" id="confirmModal">
+    <div class="modal-box glass">
+      <h3 id="confirmTitle">Konfirmasi</h3>
+      <p id="confirmMessage"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Batal</button>
+        <button class="btn btn-approve" id="confirmOkBtn">Ya</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="rejectModal">
+    <div class="modal-box glass">
+      <h3>Tolak pendaftaran</h3>
+      <p>Alasan ini akan dikirim ke pasien lewat WhatsApp.</p>
+      <textarea id="rejectReason" placeholder="Contoh: kamar penuh sampai tanggal ..."></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('rejectModal')">Batal</button>
+        <button class="btn btn-reject" style="background: var(--danger); color: #fff; border: none;" onclick="submitReject()">Kirim Penolakan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="scheduleModal">
+    <div class="modal-box glass">
+      <h3>Edit jadwal</h3>
+      <p>Ubah tanggal kalau ada perubahan jadwal checkin/checkout.</p>
+      <div class="modal-field">
+        <label>Tanggal Checkin</label>
+        <input type="date" id="scheduleCheckin">
+      </div>
+      <div class="modal-field">
+        <label>Tanggal Checkout</label>
+        <input type="date" id="scheduleCheckout">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('scheduleModal')">Batal</button>
+        <button class="btn btn-primary" onclick="submitSchedule()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="photoModal">
+    <div class="modal-box glass photo-modal-box">
+      <div class="modal-top">
+        <h3 id="photoModalTitle">Foto</h3>
+        <button class="btn btn-ghost" onclick="closeModal('photoModal')">Tutup</button>
+      </div>
+      <div class="photo-loading" id="photoModalLoading">Memuat foto...</div>
+      <img id="photoModalImg" style="display:none;">
+      <div class="reject-reason" id="photoModalError" style="display:none;"></div>
+      <div class="modal-actions">
+        <a id="photoModalDownload" class="btn btn-ghost" style="display:none; text-decoration:none;" download="foto.jpg">Unduh</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    // GANTI dengan URL Web App Apps Script kamu setelah deploy (sama dengan yang dipakai form pendaftaran)
+    var SCRIPT_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
+
+    function callBackend(payload) {
+      return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+        .then(function (res) { return res.json(); });
+    }
+
+    var sessionToken = null;
+    var modalTargetId = null;
+
+    function login(event) {
+      event.preventDefault();
+      if (SCRIPT_URL.indexOf('GANTI_DENGAN') === 0) {
+        document.getElementById('loginError').textContent = 'SCRIPT_URL belum diganti dengan URL Web App Apps Script.';
+        document.getElementById('loginError').style.display = 'block';
+        return;
+      }
+
+      var pwInput = document.getElementById('passwordInput');
+      var errorEl = document.getElementById('loginError');
+      var btn = document.getElementById('loginBtn');
+      errorEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Memeriksa...';
+
+      callBackend({ action: 'login', password: pwInput.value })
+        .then(function (res) {
+          btn.disabled = false;
+          btn.textContent = 'Masuk';
+          if (res.success) {
+            sessionToken = res.token;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'block';
+            loadDashboard();
+          } else {
+            errorEl.textContent = res.message;
+            errorEl.style.display = 'block';
+          }
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = 'Masuk';
+          errorEl.textContent = 'Gagal terhubung ke server.';
+          errorEl.style.display = 'block';
+        });
+    }
+
+    function loadDashboard() {
+      callBackend({ action: 'dashboard', token: sessionToken })
+        .then(function (res) {
+          if (res.success === false) { handleSessionError(); return; }
+          renderDashboard(res);
+        })
+        .catch(handleSessionError);
+    }
+
+    function handleSessionError() {
+      showToast('Sesi habis, silakan login ulang', true);
+      document.getElementById('dashboardScreen').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'flex';
+    }
+
+    function renderDashboard(data) {
+      document.getElementById('topbarTitle').textContent = 'GSP Nurul Hayat - ' + data.kota;
+      document.title = 'Dashboard Admin - GSP ' + data.kota;
+
+      const occ = data.occupancy;
+      const badge = document.getElementById('occupancyBadge');
+      badge.textContent = occ.count + '/' + occ.capacity + ' kamar terisi';
+      badge.classList.toggle('badge-full', occ.full);
+
+      document.getElementById('tabCountMenunggu').textContent = data.menunggu.length;
+      document.getElementById('tabCountDiterima').textContent = data.diterima.length;
+      document.getElementById('tabCountDitolak').textContent = data.ditolak.length;
+      document.getElementById('tabCountSelesai').textContent = data.selesai.length;
+
+      renderList('panel-menunggu', data.menunggu, 'menunggu');
+      renderList('panel-diterima', data.diterima, 'diterima');
+      renderList('panel-ditolak', data.ditolak, 'ditolak');
+      renderList('panel-selesai', data.selesai, 'selesai');
+    }
+
+    function renderList(containerId, items, type) {
+      const container = document.getElementById(containerId);
+      if (items.length === 0) {
+        container.innerHTML = '<div class="empty-state">Belum ada data di sini.</div>';
+        return;
+      }
+      container.innerHTML = items.map(function (item) { return renderCard(item, type); }).join('');
+    }
+
+    function renderCard(item, type) {
+      let actions = '';
+      if (type === 'menunggu') {
+        actions =
+          '<button class="btn btn-approve" onclick="approve(\'' + item.ID + '\')">Setuju</button>' +
+          '<button class="btn btn-reject" onclick="openRejectModal(\'' + item.ID + '\')">Tolak</button>';
+      } else if (type === 'diterima') {
+        actions =
+          '<button class="btn btn-ghost" onclick="openScheduleModal(\'' + item.ID + '\',\'' + item.checkinISO + '\',\'' + item.checkoutISO + '\')">Edit Jadwal</button>' +
+          '<button class="btn btn-checkout" onclick="checkout(\'' + item.ID + '\')">Checkout</button>';
+      } else if (type === 'ditolak') {
+        actions = '<div class="reject-reason">Alasan: ' + escapeHtml(item['Alasan Ditolak']) + '</div>';
+      } else if (type === 'selesai') {
+        actions = '<div class="history-note">Checkout aktual: ' + escapeHtml(item['Tanggal Checkout Aktual'] || '-') + '</div>';
+      }
+
+      const photos =
+        (item['Foto KTP'] ? '<button type="button" class="photo-link" onclick="viewPhoto(\'' + escapeJs(item['Foto KTP']) + '\',\'Foto KTP - ' + escapeJs(item['Nama Pasien']) + '\')">Lihat KTP</button>' : '') +
+        (item['Foto BPJS'] ? '<button type="button" class="photo-link" onclick="viewPhoto(\'' + escapeJs(item['Foto BPJS']) + '\',\'Foto BPJS - ' + escapeJs(item['Nama Pasien']) + '\')">Lihat BPJS</button>' : '');
+
+      return '' +
+        '<div class="card glass">' +
+          '<div class="card-header"><h3>' + escapeHtml(item['Nama Pasien']) + '</h3>' +
+          '<span class="card-date">' + escapeHtml(item['Tanggal Checkin']) + ' &rarr; ' + escapeHtml(item['Tanggal Checkout']) + '</span></div>' +
+          '<div class="card-body">' +
+            '<div class="card-field"><span>Alamat</span>' + escapeHtml(item.Alamat) + '</div>' +
+            '<div class="card-field"><span>No. WhatsApp</span>' + escapeHtml(item['No WA 1']) + (item['No WA 2'] ? ' / ' + escapeHtml(item['No WA 2']) : '') + '</div>' +
+            '<div class="card-field"><span>Penanggung Jawab</span>' + escapeHtml(item['Penanggung Jawab']) + '</div>' +
+            '<div class="card-field"><span>Riwayat Penyakit</span>' + escapeHtml(item['Riwayat Penyakit']) + '</div>' +
+            '<div class="card-photos">' + photos + '</div>' +
+          '</div>' +
+          '<div class="card-actions">' + actions + '</div>' +
+        '</div>';
+    }
+
+    function escapeHtml(str) {
+      if (str === undefined || str === null) return '';
+      return String(str).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function escapeJs(str) {
+      if (str === undefined || str === null) return '';
+      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function switchTab(tab) {
+      ['menunggu', 'diterima', 'ditolak', 'selesai'].forEach(function (t) {
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('panel-' + t).style.display = t === tab ? 'grid' : 'none';
+      });
+    }
+
+    var confirmCallback = null;
+
+    function showConfirm(message, onConfirm, okLabel) {
+      document.getElementById('confirmMessage').textContent = message;
+      document.getElementById('confirmOkBtn').textContent = okLabel || 'Ya';
+      confirmCallback = onConfirm;
+      document.getElementById('confirmModal').style.display = 'flex';
+    }
+
+    document.getElementById('confirmOkBtn').addEventListener('click', function () {
+      closeModal('confirmModal');
+      if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+    });
+
+    function approve(id) {
+      showConfirm('Setujui pendaftaran ini?', function () {
+        setBusy(true);
+        callBackend({ action: 'approve', token: sessionToken, id: id })
+          .then(function (res) { setBusy(false); afterAction(res, 'Pendaftaran disetujui'); })
+          .catch(function (err) { setBusy(false); showToast(err.message, true); });
+      }, 'Setujui');
+    }
+
+    function checkout(id) {
+      showConfirm('Checkout pasien ini sekarang?', function () {
+        setBusy(true);
+        callBackend({ action: 'checkout', token: sessionToken, id: id })
+          .then(function (res) { setBusy(false); afterAction(res, 'Pasien sudah di-checkout'); })
+          .catch(function (err) { setBusy(false); showToast(err.message, true); });
+      }, 'Checkout');
+    }
+
+    function openRejectModal(id) {
+      modalTargetId = id;
+      document.getElementById('rejectReason').value = '';
+      document.getElementById('rejectModal').style.display = 'flex';
+    }
+
+    function submitReject() {
+      const reason = document.getElementById('rejectReason').value.trim();
+      if (!reason) { showToast('Alasan penolakan wajib diisi', true); return; }
+      closeModal('rejectModal');
+      setBusy(true);
+      callBackend({ action: 'reject', token: sessionToken, id: modalTargetId, alasan: reason })
+        .then(function (res) { setBusy(false); afterAction(res, 'Pendaftaran ditolak'); })
+        .catch(function (err) { setBusy(false); showToast(err.message, true); });
+    }
+
+    function openScheduleModal(id, checkinISO, checkoutISO) {
+      modalTargetId = id;
+      document.getElementById('scheduleCheckin').value = checkinISO || '';
+      document.getElementById('scheduleCheckout').value = checkoutISO || '';
+      document.getElementById('scheduleModal').style.display = 'flex';
+    }
+
+    function viewPhoto(driveUrl, label) {
+      document.getElementById('photoModalTitle').textContent = label;
+      document.getElementById('photoModalImg').style.display = 'none';
+      document.getElementById('photoModalError').style.display = 'none';
+      document.getElementById('photoModalDownload').style.display = 'none';
+      document.getElementById('photoModalLoading').style.display = 'block';
+      document.getElementById('photoModal').style.display = 'flex';
+
+      callBackend({ action: 'getPhoto', token: sessionToken, driveUrl: driveUrl })
+        .then(function (res) {
+          document.getElementById('photoModalLoading').style.display = 'none';
+          if (res.success) {
+            const img = document.getElementById('photoModalImg');
+            img.src = res.dataUri;
+            img.style.display = 'block';
+            const dl = document.getElementById('photoModalDownload');
+            dl.href = res.dataUri;
+            dl.style.display = 'inline-block';
+          } else {
+            const errEl = document.getElementById('photoModalError');
+            errEl.textContent = res.message;
+            errEl.style.display = 'block';
+          }
+        })
+        .catch(function (err) {
+          document.getElementById('photoModalLoading').style.display = 'none';
+          const errEl = document.getElementById('photoModalError');
+          errEl.textContent = err.message;
+          errEl.style.display = 'block';
+        });
+    }
+
+    function submitSchedule() {
+      const checkin = document.getElementById('scheduleCheckin').value;
+      const checkout = document.getElementById('scheduleCheckout').value;
+      closeModal('scheduleModal');
+      setBusy(true);
+      callBackend({ action: 'updateSchedule', token: sessionToken, id: modalTargetId, checkin: checkin, checkout: checkout })
+        .then(function (res) { setBusy(false); afterAction(res, 'Jadwal diperbarui'); })
+        .catch(function (err) { setBusy(false); showToast(err.message, true); });
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function afterAction(res, successMsg) {
+      if (res.success) {
+        showToast(successMsg, false);
+        loadDashboard();
+      } else {
+        showToast(res.message, true);
+      }
+    }
+
+    function setBusy(isBusy) {
+      document.body.classList.toggle('busy', isBusy);
+    }
+
+    let toastTimer = null;
+    function showToast(message, isError) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.toggle('toast-error', !!isError);
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 3500);
+    }
+  </script>
+</body>
+</html>
