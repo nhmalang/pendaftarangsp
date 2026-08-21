@@ -270,7 +270,7 @@
 
   <script>
     // GANTI dengan URL Web App Apps Script kamu setelah deploy (sama dengan yang dipakai form pendaftaran)
-    var SCRIPT_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
+    var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6eZ59ERu-Uqx9ZBqkEAUldAjB5KzU2KlqfF2EjFO4WIme6qZWpnpjiznNVCWEvksc2g/exec';
 
     function callBackend(payload) {
       return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
