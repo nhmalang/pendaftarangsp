@@ -356,64 +356,11 @@ function handleLoadError(message) {
 
 // ===== RENDER DASHBOARD (DIPERBAIKI) =====
 function renderDashboard(data) {
-  console.log('=== RENDER DASHBOARD ===');
-  console.log('📦 Data mentah:', data);
-
-  try {
-    // 1. Pastikan semua array ada (fallback)
-    var menunggu = Array.isArray(data.menunggu) ? data.menunggu : [];
-    var antrian = Array.isArray(data.antrian) ? data.antrian : [];
-    var diterima = Array.isArray(data.diterima) ? data.diterima : [];
-    var ditolak = Array.isArray(data.ditolak) ? data.ditolak : [];
-    var selesai = Array.isArray(data.selesai) ? data.selesai : [];
-
-    console.log('✅ menunggu:', menunggu.length);
-    console.log('✅ antrian:', antrian.length);
-    console.log('✅ diterima:', diterima.length);
-    console.log('✅ ditolak:', ditolak.length);
-    console.log('✅ selesai:', selesai.length);
-
-    // 2. Hitung okupansi dari jumlah diterima (yang sedang menginap)
-    var occupancyCount = diterima.length;
-    var capacity = 10;
-    if (data.occupancy && typeof data.occupancy.capacity === 'number') {
-      capacity = data.occupancy.capacity;
-    }
-    var full = occupancyCount >= capacity;
-
-    // 3. Update judul
-    var kota = data.kota || '';
-    document.getElementById('topbarTitle').textContent = 'GSP Nurul Hayat - ' + kota;
-    document.title = 'Dashboard Admin - GSP ' + kota;
-
-    // 4. Update badge okupansi
-    var badge = document.getElementById('occupancyBadge');
-    if (badge) {
-      badge.textContent = occupancyCount + '/' + capacity + ' kamar terisi';
-      badge.classList.toggle('badge-full', full);
-    } else {
-      console.error('❌ Elemen occupancyBadge tidak ditemukan!');
-    }
-
-    // 5. Update counter tab
-    document.getElementById('tabCountMenunggu').textContent = menunggu.length;
-    document.getElementById('tabCountAntrian').textContent = antrian.length;
-    document.getElementById('tabCountDiterima').textContent = diterima.length;
-    document.getElementById('tabCountDitolak').textContent = ditolak.length;
-    document.getElementById('tabCountSelesai').textContent = selesai.length;
-
-    // 6. Render semua panel
-    renderList('panel-menunggu', menunggu, 'menunggu');
-    renderList('panel-antrian', antrian, 'antrian');
-    renderList('panel-diterima', diterima, 'diterima');
-    renderList('panel-ditolak', ditolak, 'ditolak');
-    renderList('panel-selesai', selesai, 'selesai');
-
-    console.log('✅ Render dashboard selesai.');
-  } catch (e) {
-    console.error('❌ ERROR di renderDashboard:', e);
-    showToast('Terjadi error saat merender data: ' + e.message, true);
-  }
+  alert('Render dipanggil!');
+  console.log('DATA:', data);
+  
+  // Tampilkan data mentah di layar agar terlihat
+  document.getElementById('panel-menunggu').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
 }
 
 // ===== RENDER LIST (DIPERBAIKI) =====
