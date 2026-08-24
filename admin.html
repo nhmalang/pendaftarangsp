@@ -198,12 +198,14 @@
 
     <div class="tabs">
       <div class="tab active" id="tab-menunggu" onclick="switchTab('menunggu')">Menunggu Verifikasi (<span id="tabCountMenunggu">0</span>)</div>
+      <div class="tab" id="tab-antrian" onclick="switchTab('antrian')">Booking (<span id="tabCountAntrian">0</span>)</div>
       <div class="tab" id="tab-diterima" onclick="switchTab('diterima')">Sedang Menginap (<span id="tabCountDiterima">0</span>)</div>
       <div class="tab" id="tab-ditolak" onclick="switchTab('ditolak')">Ditolak (<span id="tabCountDitolak">0</span>)</div>
       <div class="tab" id="tab-selesai" onclick="switchTab('selesai')">Riwayat (<span id="tabCountSelesai">0</span>)</div>
     </div>
 
     <div class="panel" id="panel-menunggu" style="display: grid;"></div>
+    <div class="panel" id="panel-antrian" style="display: none;"></div>
     <div class="panel" id="panel-diterima" style="display: none;"></div>
     <div class="panel" id="panel-ditolak" style="display: none;"></div>
     <div class="panel" id="panel-selesai" style="display: none;"></div>
@@ -270,7 +272,7 @@
 
   <script>
     // GANTI dengan URL Web App Apps Script kamu setelah deploy (sama dengan yang dipakai form pendaftaran)
-    var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6eZ59ERu-Uqx9ZBqkEAUldAjB5KzU2KlqfF2EjFO4WIme6qZWpnpjiznNVCWEvksc2g/exec';
+    var SCRIPT_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
 
     function callBackend(payload) {
       return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
@@ -320,16 +322,21 @@
     function loadDashboard() {
       callBackend({ action: 'dashboard', token: sessionToken })
         .then(function (res) {
-          if (res.success === false) { handleSessionError(); return; }
+          if (res.success === false) { handleLoadError(res.message); return; }
           renderDashboard(res);
         })
-        .catch(handleSessionError);
+        .catch(function () { handleLoadError('Gagal terhubung ke server'); });
     }
 
-    function handleSessionError() {
-      showToast('Sesi habis, silakan login ulang', true);
-      document.getElementById('dashboardScreen').style.display = 'none';
-      document.getElementById('loginScreen').style.display = 'flex';
+    function handleLoadError(message) {
+      message = message || 'kesalahan tidak diketahui';
+      if (message.indexOf('Sesi habis') !== -1) {
+        showToast('Sesi habis, silakan login ulang', true);
+        document.getElementById('dashboardScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+      } else {
+        showToast('Gagal memuat data: ' + message, true);
+      }
     }
 
     function renderDashboard(data) {
@@ -342,11 +349,13 @@
       badge.classList.toggle('badge-full', occ.full);
 
       document.getElementById('tabCountMenunggu').textContent = data.menunggu.length;
+      document.getElementById('tabCountAntrian').textContent = data.antrian.length;
       document.getElementById('tabCountDiterima').textContent = data.diterima.length;
       document.getElementById('tabCountDitolak').textContent = data.ditolak.length;
       document.getElementById('tabCountSelesai').textContent = data.selesai.length;
 
       renderList('panel-menunggu', data.menunggu, 'menunggu');
+      renderList('panel-antrian', data.antrian, 'antrian');
       renderList('panel-diterima', data.diterima, 'diterima');
       renderList('panel-ditolak', data.ditolak, 'ditolak');
       renderList('panel-selesai', data.selesai, 'selesai');
@@ -367,6 +376,10 @@
         actions =
           '<button class="btn btn-approve" onclick="approve(\'' + item.ID + '\')">Setuju</button>' +
           '<button class="btn btn-reject" onclick="openRejectModal(\'' + item.ID + '\')">Tolak</button>';
+      } else if (type === 'antrian') {
+        actions =
+          '<div class="history-note">Menunggu tanggal checkin</div>' +
+          '<button class="btn btn-ghost" onclick="openScheduleModal(\'' + item.ID + '\',\'' + item.checkinISO + '\',\'' + item.checkoutISO + '\')">Edit Jadwal</button>';
       } else if (type === 'diterima') {
         actions =
           '<button class="btn btn-ghost" onclick="openScheduleModal(\'' + item.ID + '\',\'' + item.checkinISO + '\',\'' + item.checkoutISO + '\')">Edit Jadwal</button>' +
@@ -409,7 +422,7 @@
     }
 
     function switchTab(tab) {
-      ['menunggu', 'diterima', 'ditolak', 'selesai'].forEach(function (t) {
+      ['menunggu', 'antrian', 'diterima', 'ditolak', 'selesai'].forEach(function (t) {
         document.getElementById('tab-' + t).classList.toggle('active', t === tab);
         document.getElementById('panel-' + t).style.display = t === tab ? 'grid' : 'none';
       });
