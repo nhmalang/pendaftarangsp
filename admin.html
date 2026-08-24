@@ -340,20 +340,33 @@
     }
 
     function renderDashboard(data) {
-      document.getElementById('topbarTitle').textContent = 'GSP Nurul Hayat - ' + data.kota;
-      document.title = 'Dashboard Admin - GSP ' + data.kota;
-
-      const occ = data.occupancy;
-      const badge = document.getElementById('occupancyBadge');
-      badge.textContent = occ.count + '/' + occ.capacity + ' kamar terisi';
-      badge.classList.toggle('badge-full', occ.full);
-
+      // Pastikan properti yang dibutuhkan ada (fallback ke array kosong)
+      data.menunggu = data.menunggu || [];
+      data.antrian = data.antrian || [];
+      data.diterima = data.diterima || [];
+      data.ditolak = data.ditolak || [];
+      data.selesai = data.selesai || [];
+    
+      // Hitung occupancy dari data yang ada (diterima adalah yang sedang menginap)
+      var occupancyCount = data.diterima.length;
+      var capacity = data.occupancy ? data.occupancy.capacity : 10; // default 10 jika tidak ada
+      var full = occupancyCount >= capacity;
+    
+      document.getElementById('topbarTitle').textContent = 'GSP Nurul Hayat - ' + (data.kota || '');
+      document.title = 'Dashboard Admin - GSP ' + (data.kota || '');
+    
+      var badge = document.getElementById('occupancyBadge');
+      badge.textContent = occupancyCount + '/' + capacity + ' kamar terisi';
+      badge.classList.toggle('badge-full', full);
+    
+      // Update tab counters
       document.getElementById('tabCountMenunggu').textContent = data.menunggu.length;
       document.getElementById('tabCountAntrian').textContent = data.antrian.length;
       document.getElementById('tabCountDiterima').textContent = data.diterima.length;
       document.getElementById('tabCountDitolak').textContent = data.ditolak.length;
       document.getElementById('tabCountSelesai').textContent = data.selesai.length;
-
+    
+      // Render semua panel
       renderList('panel-menunggu', data.menunggu, 'menunggu');
       renderList('panel-antrian', data.antrian, 'antrian');
       renderList('panel-diterima', data.diterima, 'diterima');
