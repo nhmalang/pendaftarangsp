@@ -271,347 +271,286 @@
   <div id="toast"></div>
 
   <script>
-    // ===== KONFIGURASI =====
-var SCRIPT_URL = 'https://script.google.com/macros/s/AkFycwb6eZ59ERu-Uq9zZBqkEAlUjdA5j5KzU2K14gFF2EJF04Nlme6aQzlpnpjzlnNVClEvkscz/g/exec'; // PASTIKAN URL INI BENAR
+    // GANTI dengan URL Web App Apps Script kamu setelah deploy (sama dengan yang dipakai form pendaftaran)
+    var SCRIPT_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
 
-// ===== FUNGSI PANGGIL BACKEND =====
-function callBackend(payload) {
-  console.log('📤 Request ke backend:', payload.action);
-  return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
-    .then(function (res) {
-      if (!res.ok) throw new Error('HTTP error ' + res.status);
-      return res.json();
-    })
-    .then(function (data) {
-      console.log('📥 Response dari backend:', data);
-      return data;
-    });
-}
-
-// ===== VARIABEL GLOBAL =====
-var sessionToken = null;
-var modalTargetId = null;
-
-// ===== LOGIN =====
-function login(event) {
-  event.preventDefault();
-  if (SCRIPT_URL.indexOf('GANTI_DENGAN') === 0) {
-    document.getElementById('loginError').textContent = 'SCRIPT_URL belum diganti dengan URL Web App Apps Script.';
-    document.getElementById('loginError').style.display = 'block';
-    return;
-  }
-
-  var pwInput = document.getElementById('passwordInput');
-  var errorEl = document.getElementById('loginError');
-  var btn = document.getElementById('loginBtn');
-  errorEl.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Memeriksa...';
-
-  callBackend({ action: 'login', password: pwInput.value })
-    .then(function (res) {
-      btn.disabled = false;
-      btn.textContent = 'Masuk';
-      if (res.success) {
-        sessionToken = res.token;
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('dashboardScreen').style.display = 'block';
-        loadDashboard();
-      } else {
-        errorEl.textContent = res.message;
-        errorEl.style.display = 'block';
-      }
-    })
-    .catch(function (err) {
-      btn.disabled = false;
-      btn.textContent = 'Masuk';
-      errorEl.textContent = 'Gagal terhubung ke server: ' + err.message;
-      errorEl.style.display = 'block';
-    });
-}
-
-// ===== LOAD DASHBOARD =====
-function loadDashboard() {
-  console.log('🔄 Memuat dashboard...');
-  callBackend({ action: 'dashboard', token: sessionToken })
-    .then(function (res) {
-      if (res.success === false) { handleLoadError(res.message); return; }
-      renderDashboard(res);
-    })
-    .catch(function (err) {
-      handleLoadError(err.message);
-    });
-}
-
-function handleLoadError(message) {
-  console.error('❌ Error load dashboard:', message);
-  if (message && message.indexOf('Sesi habis') !== -1) {
-    showToast('Sesi habis, silakan login ulang', true);
-    document.getElementById('dashboardScreen').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'flex';
-  } else {
-    showToast('Gagal memuat data: ' + message, true);
-  }
-}
-
-// ===== RENDER DASHBOARD (DIPERBAIKI) =====
-function renderDashboard(data) {
-  alert('Render dipanggil!');
-  console.log('DATA:', data);
-  
-  // Tampilkan data mentah di layar agar terlihat
-  document.getElementById('panel-menunggu').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-}
-
-// ===== RENDER LIST (DIPERBAIKI) =====
-function renderList(containerId, items, type) {
-  console.log('🖌️ renderList dipanggil untuk', type, 'dengan', items.length, 'item');
-  var container = document.getElementById(containerId);
-  if (!container) {
-    console.error('❌ Container ' + containerId + ' tidak ditemukan!');
-    return;
-  }
-
-  try {
-    if (items.length === 0) {
-      container.innerHTML = '<div class="empty-state">Belum ada data di sini.</div>';
-      return;
+    function callBackend(payload) {
+      return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+        .then(function (res) { return res.json(); });
     }
 
-    var html = '';
-    items.forEach(function(item, index) {
-      try {
-        html += renderCard(item, type);
-      } catch (cardErr) {
-        console.error('❌ Error renderCard untuk index', index, ':', cardErr);
-        // tetap tampilkan placeholder
-        html += '<div class="card glass"><div class="card-header"><h3>Error tampil data</h3></div></div>';
+    var sessionToken = null;
+    var modalTargetId = null;
+
+    function login(event) {
+      event.preventDefault();
+      if (SCRIPT_URL.indexOf('GANTI_DENGAN') === 0) {
+        document.getElementById('loginError').textContent = 'SCRIPT_URL belum diganti dengan URL Web App Apps Script.';
+        document.getElementById('loginError').style.display = 'block';
+        return;
       }
-    });
-    container.innerHTML = html;
-    console.log('✅ Render ' + type + ' berhasil.');
-  } catch (e) {
-    console.error('❌ Error di renderList untuk', type, ':', e);
-    container.innerHTML = '<div class="empty-state">Error memuat data</div>';
-  }
-}
 
-// ===== RENDER CARD (DIPERBAIKI) =====
-function renderCard(item, type) {
-  // Fungsi bantu aman
-  function safeStr(val) {
-    return (val === undefined || val === null) ? '' : String(val);
-  }
+      var pwInput = document.getElementById('passwordInput');
+      var errorEl = document.getElementById('loginError');
+      var btn = document.getElementById('loginBtn');
+      errorEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Memeriksa...';
 
-  function escapeHtml(str) {
-    if (str === undefined || str === null) return '';
-    return String(str).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c;
-    });
-  }
+      callBackend({ action: 'login', password: pwInput.value })
+        .then(function (res) {
+          btn.disabled = false;
+          btn.textContent = 'Masuk';
+          if (res.success) {
+            sessionToken = res.token;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'block';
+            loadDashboard();
+          } else {
+            errorEl.textContent = res.message;
+            errorEl.style.display = 'block';
+          }
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = 'Masuk';
+          errorEl.textContent = 'Gagal terhubung ke server.';
+          errorEl.style.display = 'block';
+        });
+    }
 
-  function escapeJs(str) {
-    if (str === undefined || str === null) return '';
-    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  }
+    function loadDashboard() {
+      callBackend({ action: 'dashboard', token: sessionToken })
+        .then(function (res) {
+          if (res.success === false) { handleLoadError(res.message); return; }
+          renderDashboard(res);
+        })
+        .catch(function () { handleLoadError('Gagal terhubung ke server'); });
+    }
 
-  // Ambil nilai dengan aman
-  var ID = safeStr(item.ID);
-  var nama = escapeHtml(safeStr(item['Nama Pasien']));
-  var checkin = escapeHtml(safeStr(item['Tanggal Checkin']));
-  var checkout = escapeHtml(safeStr(item['Tanggal Checkout']));
-  var alamat = escapeHtml(safeStr(item.Alamat));
-  var wa1 = escapeHtml(safeStr(item['No WA 1']));
-  var wa2 = safeStr(item['No WA 2']) ? ' / ' + escapeHtml(safeStr(item['No WA 2'])) : '';
-  var penanggung = escapeHtml(safeStr(item['Penanggung Jawab']));
-  var riwayat = escapeHtml(safeStr(item['Riwayat Penyakit']));
-  var fotoKTP = safeStr(item['Foto KTP']);
-  var fotoBPJS = safeStr(item['Foto BPJS']);
-  var alasanDitolak = escapeHtml(safeStr(item['Alasan Ditolak']));
-  var checkoutAktual = escapeHtml(safeStr(item['Tanggal Checkout Aktual']));
-
-  // Tentukan actions berdasarkan tipe
-  var actions = '';
-  if (type === 'menunggu') {
-    actions =
-      '<button class="btn btn-approve" onclick="approve(\'' + ID + '\')">Setuju</button>' +
-      '<button class="btn btn-reject" onclick="openRejectModal(\'' + ID + '\')">Tolak</button>';
-  } else if (type === 'antrian') {
-    actions =
-      '<div class="history-note">Menunggu tanggal checkin</div>' +
-      '<button class="btn btn-ghost" onclick="openScheduleModal(\'' + ID + '\',\'' + escapeJs(safeStr(item.checkinISO)) + '\',\'' + escapeJs(safeStr(item.checkoutISO)) + '\')">Edit Jadwal</button>';
-  } else if (type === 'diterima') {
-    actions =
-      '<button class="btn btn-ghost" onclick="openScheduleModal(\'' + ID + '\',\'' + escapeJs(safeStr(item.checkinISO)) + '\',\'' + escapeJs(safeStr(item.checkoutISO)) + '\')">Edit Jadwal</button>' +
-      '<button class="btn btn-checkout" onclick="checkout(\'' + ID + '\')">Checkout</button>';
-  } else if (type === 'ditolak') {
-    actions = '<div class="reject-reason">Alasan: ' + alasanDitolak + '</div>';
-  } else if (type === 'selesai') {
-    actions = '<div class="history-note">Checkout aktual: ' + (checkoutAktual || '-') + '</div>';
-  }
-
-  // Foto
-  var photos = '';
-  if (fotoKTP) {
-    photos += '<button type="button" class="photo-link" onclick="viewPhoto(\'' + escapeJs(fotoKTP) + '\',\'Foto KTP - ' + escapeJs(nama) + '\')">Lihat KTP</button>';
-  }
-  if (fotoBPJS) {
-    photos += '<button type="button" class="photo-link" onclick="viewPhoto(\'' + escapeJs(fotoBPJS) + '\',\'Foto BPJS - ' + escapeJs(nama) + '\')">Lihat BPJS</button>';
-  }
-
-  return '' +
-    '<div class="card glass">' +
-      '<div class="card-header"><h3>' + nama + '</h3>' +
-      '<span class="card-date">' + checkin + ' &rarr; ' + checkout + '</span></div>' +
-      '<div class="card-body">' +
-        '<div class="card-field"><span>Alamat</span>' + alamat + '</div>' +
-        '<div class="card-field"><span>No. WhatsApp</span>' + wa1 + wa2 + '</div>' +
-        '<div class="card-field"><span>Penanggung Jawab</span>' + penanggung + '</div>' +
-        '<div class="card-field"><span>Riwayat Penyakit</span>' + riwayat + '</div>' +
-        (photos ? '<div class="card-photos">' + photos + '</div>' : '') +
-      '</div>' +
-      '<div class="card-actions">' + actions + '</div>' +
-    '</div>';
-}
-
-// ===== SWITCH TAB =====
-function switchTab(tab) {
-  var tabs = ['menunggu', 'antrian', 'diterima', 'ditolak', 'selesai'];
-  tabs.forEach(function(t) {
-    var tabEl = document.getElementById('tab-' + t);
-    var panelEl = document.getElementById('panel-' + t);
-    if (tabEl) tabEl.classList.toggle('active', t === tab);
-    if (panelEl) panelEl.style.display = (t === tab) ? 'grid' : 'none';
-  });
-}
-
-// ===== MODAL =====
-var confirmCallback = null;
-
-function showConfirm(message, onConfirm, okLabel) {
-  document.getElementById('confirmMessage').textContent = message;
-  document.getElementById('confirmOkBtn').textContent = okLabel || 'Ya';
-  confirmCallback = onConfirm;
-  document.getElementById('confirmModal').style.display = 'flex';
-}
-
-document.getElementById('confirmOkBtn').addEventListener('click', function () {
-  closeModal('confirmModal');
-  if (confirmCallback) { confirmCallback(); confirmCallback = null; }
-});
-
-// ===== AKSI =====
-function approve(id) {
-  showConfirm('Setujui pendaftaran ini?', function () {
-    setBusy(true);
-    callBackend({ action: 'approve', token: sessionToken, id: id })
-      .then(function (res) { setBusy(false); afterAction(res, 'Pendaftaran disetujui'); })
-      .catch(function (err) { setBusy(false); showToast(err.message, true); });
-  }, 'Setujui');
-}
-
-function checkout(id) {
-  showConfirm('Checkout pasien ini sekarang?', function () {
-    setBusy(true);
-    callBackend({ action: 'checkout', token: sessionToken, id: id })
-      .then(function (res) { setBusy(false); afterAction(res, 'Pasien sudah di-checkout'); })
-      .catch(function (err) { setBusy(false); showToast(err.message, true); });
-  }, 'Checkout');
-}
-
-function openRejectModal(id) {
-  modalTargetId = id;
-  document.getElementById('rejectReason').value = '';
-  document.getElementById('rejectModal').style.display = 'flex';
-}
-
-function submitReject() {
-  var reason = document.getElementById('rejectReason').value.trim();
-  if (!reason) { showToast('Alasan penolakan wajib diisi', true); return; }
-  closeModal('rejectModal');
-  setBusy(true);
-  callBackend({ action: 'reject', token: sessionToken, id: modalTargetId, alasan: reason })
-    .then(function (res) { setBusy(false); afterAction(res, 'Pendaftaran ditolak'); })
-    .catch(function (err) { setBusy(false); showToast(err.message, true); });
-}
-
-function openScheduleModal(id, checkinISO, checkoutISO) {
-  modalTargetId = id;
-  document.getElementById('scheduleCheckin').value = checkinISO || '';
-  document.getElementById('scheduleCheckout').value = checkoutISO || '';
-  document.getElementById('scheduleModal').style.display = 'flex';
-}
-
-function submitSchedule() {
-  var checkin = document.getElementById('scheduleCheckin').value;
-  var checkout = document.getElementById('scheduleCheckout').value;
-  closeModal('scheduleModal');
-  setBusy(true);
-  callBackend({ action: 'updateSchedule', token: sessionToken, id: modalTargetId, checkin: checkin, checkout: checkout })
-    .then(function (res) { setBusy(false); afterAction(res, 'Jadwal diperbarui'); })
-    .catch(function (err) { setBusy(false); showToast(err.message, true); });
-}
-
-// ===== FOTO =====
-function viewPhoto(driveUrl, label) {
-  document.getElementById('photoModalTitle').textContent = label;
-  document.getElementById('photoModalImg').style.display = 'none';
-  document.getElementById('photoModalError').style.display = 'none';
-  document.getElementById('photoModalDownload').style.display = 'none';
-  document.getElementById('photoModalLoading').style.display = 'block';
-  document.getElementById('photoModal').style.display = 'flex';
-
-  callBackend({ action: 'getPhoto', token: sessionToken, driveUrl: driveUrl })
-    .then(function (res) {
-      document.getElementById('photoModalLoading').style.display = 'none';
-      if (res.success) {
-        var img = document.getElementById('photoModalImg');
-        img.src = res.dataUri;
-        img.style.display = 'block';
-        var dl = document.getElementById('photoModalDownload');
-        dl.href = res.dataUri;
-        dl.style.display = 'inline-block';
+    function handleLoadError(message) {
+      message = message || 'kesalahan tidak diketahui';
+      if (message.indexOf('Sesi habis') !== -1) {
+        showToast('Sesi habis, silakan login ulang', true);
+        document.getElementById('dashboardScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
       } else {
-        var errEl = document.getElementById('photoModalError');
-        errEl.textContent = res.message;
-        errEl.style.display = 'block';
+        showToast('Gagal memuat data: ' + message, true);
       }
-    })
-    .catch(function (err) {
-      document.getElementById('photoModalLoading').style.display = 'none';
-      var errEl = document.getElementById('photoModalError');
-      errEl.textContent = err.message;
-      errEl.style.display = 'block';
+    }
+
+    function renderDashboard(data) {
+      document.getElementById('topbarTitle').textContent = 'GSP Nurul Hayat - ' + data.kota;
+      document.title = 'Dashboard Admin - GSP ' + data.kota;
+
+      const occ = data.occupancy;
+      const badge = document.getElementById('occupancyBadge');
+      badge.textContent = occ.count + '/' + occ.capacity + ' kamar terisi';
+      badge.classList.toggle('badge-full', occ.full);
+
+      document.getElementById('tabCountMenunggu').textContent = data.menunggu.length;
+      document.getElementById('tabCountAntrian').textContent = data.antrian.length;
+      document.getElementById('tabCountDiterima').textContent = data.diterima.length;
+      document.getElementById('tabCountDitolak').textContent = data.ditolak.length;
+      document.getElementById('tabCountSelesai').textContent = data.selesai.length;
+
+      renderList('panel-menunggu', data.menunggu, 'menunggu');
+      renderList('panel-antrian', data.antrian, 'antrian');
+      renderList('panel-diterima', data.diterima, 'diterima');
+      renderList('panel-ditolak', data.ditolak, 'ditolak');
+      renderList('panel-selesai', data.selesai, 'selesai');
+    }
+
+    function renderList(containerId, items, type) {
+      const container = document.getElementById(containerId);
+      if (items.length === 0) {
+        container.innerHTML = '<div class="empty-state">Belum ada data di sini.</div>';
+        return;
+      }
+      container.innerHTML = items.map(function (item) { return renderCard(item, type); }).join('');
+    }
+
+    function renderCard(item, type) {
+      let actions = '';
+      if (type === 'menunggu') {
+        actions =
+          '<button class="btn btn-approve" onclick="approve(\'' + item.ID + '\')">Setuju</button>' +
+          '<button class="btn btn-reject" onclick="openRejectModal(\'' + item.ID + '\')">Tolak</button>';
+      } else if (type === 'antrian') {
+        actions =
+          '<div class="history-note">Menunggu tanggal checkin</div>' +
+          '<button class="btn btn-ghost" onclick="openScheduleModal(\'' + item.ID + '\',\'' + item.checkinISO + '\',\'' + item.checkoutISO + '\')">Edit Jadwal</button>';
+      } else if (type === 'diterima') {
+        actions =
+          '<button class="btn btn-ghost" onclick="openScheduleModal(\'' + item.ID + '\',\'' + item.checkinISO + '\',\'' + item.checkoutISO + '\')">Edit Jadwal</button>' +
+          '<button class="btn btn-checkout" onclick="checkout(\'' + item.ID + '\')">Checkout</button>';
+      } else if (type === 'ditolak') {
+        actions = '<div class="reject-reason">Alasan: ' + escapeHtml(item['Alasan Ditolak']) + '</div>';
+      } else if (type === 'selesai') {
+        actions = '<div class="history-note">Checkout aktual: ' + escapeHtml(item['Tanggal Checkout Aktual'] || '-') + '</div>';
+      }
+
+      const photos =
+        (item['Foto KTP'] ? '<button type="button" class="photo-link" onclick="viewPhoto(\'' + escapeJs(item['Foto KTP']) + '\',\'Foto KTP - ' + escapeJs(item['Nama Pasien']) + '\')">Lihat KTP</button>' : '') +
+        (item['Foto BPJS'] ? '<button type="button" class="photo-link" onclick="viewPhoto(\'' + escapeJs(item['Foto BPJS']) + '\',\'Foto BPJS - ' + escapeJs(item['Nama Pasien']) + '\')">Lihat BPJS</button>' : '');
+
+      return '' +
+        '<div class="card glass">' +
+          '<div class="card-header"><h3>' + escapeHtml(item['Nama Pasien']) + '</h3>' +
+          '<span class="card-date">' + escapeHtml(item['Tanggal Checkin']) + ' &rarr; ' + escapeHtml(item['Tanggal Checkout']) + '</span></div>' +
+          '<div class="card-body">' +
+            '<div class="card-field"><span>Alamat</span>' + escapeHtml(item.Alamat) + '</div>' +
+            '<div class="card-field"><span>No. WhatsApp</span>' + escapeHtml(item['No WA 1']) + (item['No WA 2'] ? ' / ' + escapeHtml(item['No WA 2']) : '') + '</div>' +
+            '<div class="card-field"><span>Penanggung Jawab</span>' + escapeHtml(item['Penanggung Jawab']) + '</div>' +
+            '<div class="card-field"><span>Riwayat Penyakit</span>' + escapeHtml(item['Riwayat Penyakit']) + '</div>' +
+            '<div class="card-photos">' + photos + '</div>' +
+          '</div>' +
+          '<div class="card-actions">' + actions + '</div>' +
+        '</div>';
+    }
+
+    function escapeHtml(str) {
+      if (str === undefined || str === null) return '';
+      return String(str).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function escapeJs(str) {
+      if (str === undefined || str === null) return '';
+      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function switchTab(tab) {
+      ['menunggu', 'antrian', 'diterima', 'ditolak', 'selesai'].forEach(function (t) {
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('panel-' + t).style.display = t === tab ? 'grid' : 'none';
+      });
+    }
+
+    var confirmCallback = null;
+
+    function showConfirm(message, onConfirm, okLabel) {
+      document.getElementById('confirmMessage').textContent = message;
+      document.getElementById('confirmOkBtn').textContent = okLabel || 'Ya';
+      confirmCallback = onConfirm;
+      document.getElementById('confirmModal').style.display = 'flex';
+    }
+
+    document.getElementById('confirmOkBtn').addEventListener('click', function () {
+      closeModal('confirmModal');
+      if (confirmCallback) { confirmCallback(); confirmCallback = null; }
     });
-}
 
-// ===== UTILITY =====
-function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
-}
+    function approve(id) {
+      showConfirm('Setujui pendaftaran ini?', function () {
+        setBusy(true);
+        callBackend({ action: 'approve', token: sessionToken, id: id })
+          .then(function (res) { setBusy(false); afterAction(res, 'Pendaftaran disetujui'); })
+          .catch(function (err) { setBusy(false); showToast(err.message, true); });
+      }, 'Setujui');
+    }
 
-function afterAction(res, successMsg) {
-  if (res.success) {
-    showToast(successMsg, false);
-    loadDashboard();
-  } else {
-    showToast(res.message, true);
-  }
-}
+    function checkout(id) {
+      showConfirm('Checkout pasien ini sekarang?', function () {
+        setBusy(true);
+        callBackend({ action: 'checkout', token: sessionToken, id: id })
+          .then(function (res) { setBusy(false); afterAction(res, 'Pasien sudah di-checkout'); })
+          .catch(function (err) { setBusy(false); showToast(err.message, true); });
+      }, 'Checkout');
+    }
 
-function setBusy(isBusy) {
-  document.body.classList.toggle('busy', isBusy);
-}
+    function openRejectModal(id) {
+      modalTargetId = id;
+      document.getElementById('rejectReason').value = '';
+      document.getElementById('rejectModal').style.display = 'flex';
+    }
 
-var toastTimer = null;
-function showToast(message, isError) {
-  var toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.classList.toggle('toast-error', !!isError);
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 3500);
-}
+    function submitReject() {
+      const reason = document.getElementById('rejectReason').value.trim();
+      if (!reason) { showToast('Alasan penolakan wajib diisi', true); return; }
+      closeModal('rejectModal');
+      setBusy(true);
+      callBackend({ action: 'reject', token: sessionToken, id: modalTargetId, alasan: reason })
+        .then(function (res) { setBusy(false); afterAction(res, 'Pendaftaran ditolak'); })
+        .catch(function (err) { setBusy(false); showToast(err.message, true); });
+    }
+
+    function openScheduleModal(id, checkinISO, checkoutISO) {
+      modalTargetId = id;
+      document.getElementById('scheduleCheckin').value = checkinISO || '';
+      document.getElementById('scheduleCheckout').value = checkoutISO || '';
+      document.getElementById('scheduleModal').style.display = 'flex';
+    }
+
+    function viewPhoto(driveUrl, label) {
+      document.getElementById('photoModalTitle').textContent = label;
+      document.getElementById('photoModalImg').style.display = 'none';
+      document.getElementById('photoModalError').style.display = 'none';
+      document.getElementById('photoModalDownload').style.display = 'none';
+      document.getElementById('photoModalLoading').style.display = 'block';
+      document.getElementById('photoModal').style.display = 'flex';
+
+      callBackend({ action: 'getPhoto', token: sessionToken, driveUrl: driveUrl })
+        .then(function (res) {
+          document.getElementById('photoModalLoading').style.display = 'none';
+          if (res.success) {
+            const img = document.getElementById('photoModalImg');
+            img.src = res.dataUri;
+            img.style.display = 'block';
+            const dl = document.getElementById('photoModalDownload');
+            dl.href = res.dataUri;
+            dl.style.display = 'inline-block';
+          } else {
+            const errEl = document.getElementById('photoModalError');
+            errEl.textContent = res.message;
+            errEl.style.display = 'block';
+          }
+        })
+        .catch(function (err) {
+          document.getElementById('photoModalLoading').style.display = 'none';
+          const errEl = document.getElementById('photoModalError');
+          errEl.textContent = err.message;
+          errEl.style.display = 'block';
+        });
+    }
+
+    function submitSchedule() {
+      const checkin = document.getElementById('scheduleCheckin').value;
+      const checkout = document.getElementById('scheduleCheckout').value;
+      closeModal('scheduleModal');
+      setBusy(true);
+      callBackend({ action: 'updateSchedule', token: sessionToken, id: modalTargetId, checkin: checkin, checkout: checkout })
+        .then(function (res) { setBusy(false); afterAction(res, 'Jadwal diperbarui'); })
+        .catch(function (err) { setBusy(false); showToast(err.message, true); });
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function afterAction(res, successMsg) {
+      if (res.success) {
+        showToast(successMsg, false);
+        loadDashboard();
+      } else {
+        showToast(res.message, true);
+      }
+    }
+
+    function setBusy(isBusy) {
+      document.body.classList.toggle('busy', isBusy);
+    }
+
+    let toastTimer = null;
+    function showToast(message, isError) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.toggle('toast-error', !!isError);
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 3500);
+    }
   </script>
 </body>
 </html>
